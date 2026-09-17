@@ -1,0 +1,24 @@
+# SentinelAI global settings
+telemetry:
+  collection_interval_sec: 30
+  prediction_window_min: 10        # failure_in_next_Nmin label window
+  feature_windows_min: [5, 10, 15] # rolling-window sizes for feature engineering
+
+anomaly:
+  contamination: 0.05
+  levels: [NORMAL, WARNING, ANOMALOUS, CRITICAL]  # ascending score thresholds
+
+risk:
+  weights:                          # Module 5 multi-signal scoring
+    failure_probability: 0.40
+    anomaly_score: 0.25
+    error_rate: 0.15
+    latency_trend: 0.10
+    memory_growth: 0.10
+  severity_thresholds:
+    WARNING: 0.40
+    ANOMALOUS: 0.65
+    CRITICAL: 0.85
+
+recovery:
+  cooldown_sec: 60                  # wait after remediation before health re-check

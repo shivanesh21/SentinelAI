@@ -1,0 +1,9 @@
+-r requirements.txt
+
+pytest>=8.0
+pytest-cov
+httpx  # FastAPI TestClient
+jupyter
+matplotlib
+seaborn
+pre-commit

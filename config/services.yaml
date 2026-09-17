@@ -1,0 +1,25 @@
+# Simulated services tracked by SentinelAI (Module 1)
+services:
+  - name: payment-api
+    replicas: 3
+  - name: order-service
+    replicas: 2
+  - name: inventory-service
+    replicas: 2
+  - name: auth-service
+    replicas: 3
+  - name: notification-worker
+    replicas: 2
+
+# Failure scenarios that the telemetry simulator can inject (for labeled ground truth)
+failure_scenarios:
+  - type: memory_leak
+    services: [payment-api]
+  - type: connection_pool_exhaustion
+    services: [payment-api]
+  - type: latency_spike
+    services: [order-service]
+  - type: network_partition
+    services: [notification-worker]
+  - type: disk_fill
+    services: [inventory-service]

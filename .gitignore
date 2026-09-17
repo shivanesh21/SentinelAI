@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Data (raw telemetry, features, labels)
+data/raw/*
+data/processed/*
+data/features/*
+data/labels/*
+data/splits/*
+!data/raw/*.gitkeep
+!data/processed/.gitkeep
+!data/features/.gitkeep
+!data/labels/.gitkeep
+!data/splits/.gitkeep
+
+# Model artifacts
+models/anomaly/*
+models/prediction/*
+models/rca/*
+!models/anomaly/.gitkeep
+!models/prediction/.gitkeep
+!models/rca/.gitkeep
+
+# MLflow tracking store
+mlruns/*
+!mlruns/.gitkeep
+
+# Secrets / environment
+.env
+
+# Notebooks (checkpoints)
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Reports / figures (generated)
+reports/figures/*
+!reports/figures/.gitkeep
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
