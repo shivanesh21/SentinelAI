@@ -1,0 +1,280 @@
+{
+  "metric_rows": 14404,
+  "log_rows": 4998,
+  "incident_rows": 14410,
+  "interval_sec": 30,
+  "status": "FAIL",
+  "checks": [
+    {
+      "name": "metrics_schema",
+      "status": "FAIL",
+      "message": "column mismatch: ['incident_id', 'service', 'scenario_type', 'start_ts', 'end_ts', 'timestamp', 'cpu_util_pct', 'memory_util_pct', 'disk_util_pct', 'network_in_mbps', 'network_out_mbps', 'request_rate_rps', 'latency_ms', 'http_4xx_rate', 'http_5xx_rate', 'db_connections', 'db_connection_usage_pct', 'container_restarts', 'healthy']",
+      "details": null
+    },
+    {
+      "name": "logs_schema",
+      "status": "PASS",
+      "message": "4 columns match LOG_HEADER",
+      "details": null
+    },
+    {
+      "name": "truth_schema",
+      "status": "FAIL",
+      "message": "column mismatch: ['incident_id', 'service', 'scenario_type', 'start_ts', 'end_ts', 'timestamp', 'cpu_util_pct', 'memory_util_pct', 'disk_util_pct', 'network_in_mbps', 'network_out_mbps', 'request_rate_rps', 'latency_ms', 'http_4xx_rate', 'http_5xx_rate', 'db_connections', 'db_connection_usage_pct', 'container_restarts', 'healthy']",
+      "details": null
+    },
+    {
+      "name": "per_service_ticks",
+      "status": "FAIL",
+      "message": "unequal tick counts across services: {'auth-service': 2880, 'inventory-service': 2881, 'notification-worker': 2881, 'order-service': 2881, 'payment-api': 2881}",
+      "details": null
+    },
+    {
+      "name": "timestamp_alignment",
+      "status": "FAIL",
+      "message": "4 services are misaligned",
+      "details": null
+    },
+    {
+      "name": "missing_values",
+      "status": "FAIL",
+      "message": "NaN=52, Inf=0",
+      "details": null
+    },
+    {
+      "name": "metric_bounds",
+      "status": "PASS",
+      "message": "all metrics within declared bounds",
+      "details": null
+    },
+    {
+      "name": "healthy_distribution",
+      "status": "PASS",
+      "message": "healthy=0.918",
+      "details": null
+    },
+    {
+      "name": "per_service_failures",
+      "status": "WARN",
+      "message": "services never degraded: ['auth-service']",
+      "details": null
+    },
+    {
+      "name": "log_levels",
+      "status": "PASS",
+      "message": "levels=['ERROR', 'INFO', 'WARNING']",
+      "details": null
+    },
+    {
+      "name": "log_time_range",
+      "status": "PASS",
+      "message": "logs [2026-09-18 07:07:08+00:00, 2026-09-19 07:05:08+00:00] within metrics [2026-09-18 07:05:38+00:00, 2026-09-19 07:05:08+00:00]",
+      "details": null
+    },
+    {
+      "name": "incident_types",
+      "status": "PASS",
+      "message": "types seen: {'connection_pool_exhaustion': 2, 'disk_fill': 2, 'latency_spike': 2, 'memory_leak': 2, 'network_partition': 2}",
+      "details": null
+    },
+    {
+      "name": "incident_duration",
+      "status": "PASS",
+      "message": "all 14410 incidents have positive duration; max=120min",
+      "details": null
+    },
+    {
+      "name": "incident_overlap",
+      "status": "PASS",
+      "message": "no overlapping incidents within a service",
+      "details": null
+    },
+    {
+      "name": "incident_schedule_match",
+      "status": "PASS",
+      "message": "incident durations match scheduled config \u00b12 samples",
+      "details": null
+    },
+    {
+      "name": "unhealthy_alignment",
+      "status": "WARN",
+      "message": "only 0.092 of incident ticks degraded",
+      "details": null
+    },
+    {
+      "name": "recovery_after_incident",
+      "status": "WARN",
+      "message": "some services not healthy shortly after incident end",
+      "details": null
+    },
+    {
+      "name": "log_correlation",
+      "status": "WARN",
+      "message": "only 10/14410 incidents correlated with logs",
+      "details": null
+    },
+    {
+      "name": "expected_ticks",
+      "status": "INFO",
+      "message": "span 1439.5 min @ 30s -> ~2880 ticks/service",
+      "details": null
+    },
+    {
+      "name": "metric_range",
+      "status": "INFO",
+      "message": "{'request_rate_rps': 391.1, 'latency_ms': 1092.88, 'cpu_util_pct': 47.3}",
+      "details": null
+    },
+    {
+      "name": "incident_rows",
+      "status": "INFO",
+      "message": "14410 labelled incident windows",
+      "details": null
+    }
+  ],
+  "distributions": {
+    "cpu_util_pct": {
+      "unit": "%",
+      "count": 14400,
+      "mean": 26.154,
+      "std": 7.9745,
+      "min": 5.0401,
+      "p25": 20.1234,
+      "p50": 25.2172,
+      "p75": 31.5531,
+      "max": 52.3428
+    },
+    "memory_util_pct": {
+      "unit": "%",
+      "count": 14400,
+      "mean": 44.7826,
+      "std": 5.9942,
+      "min": 35.4582,
+      "p25": 39.7492,
+      "p50": 44.2582,
+      "p75": 47.8122,
+      "max": 74.412
+    },
+    "disk_util_pct": {
+      "unit": "%",
+      "count": 14400,
+      "mean": 40.05,
+      "std": 5.1944,
+      "min": 34.3982,
+      "p25": 39.8587,
+      "p50": 40.0731,
+      "p75": 40.2464,
+      "max": 78.5
+    },
+    "network_in_mbps": {
+      "unit": "Mbps",
+      "count": 14400,
+      "mean": 17.2074,
+      "std": 5.3495,
+      "min": 3.6782,
+      "p25": 13.0592,
+      "p50": 16.819,
+      "p75": 21.1925,
+      "max": 33.5414
+    },
+    "network_out_mbps": {
+      "unit": "Mbps",
+      "count": 14400,
+      "mean": 6.8882,
+      "std": 2.2198,
+      "min": 0.7919,
+      "p25": 5.2029,
+      "p50": 6.7501,
+      "p75": 8.5277,
+      "max": 13.5443
+    },
+    "request_rate_rps": {
+      "unit": "req/s",
+      "count": 14400,
+      "mean": 159.2164,
+      "std": 88.407,
+      "min": 0.0407,
+      "p25": 89.97,
+      "p50": 137.334,
+      "p75": 211.0372,
+      "max": 391.1455
+    },
+    "latency_ms": {
+      "unit": "ms",
+      "count": 14400,
+      "mean": 111.4114,
+      "std": 78.8347,
+      "min": 35.5653,
+      "p25": 75.7604,
+      "p50": 95.6525,
+      "p75": 125.3055,
+      "max": 1128.4444
+    },
+    "http_4xx_rate": {
+      "unit": "fraction",
+      "count": 14400,
+      "mean": 0.0039,
+      "std": 0.0023,
+      "min": 0.0007,
+      "p25": 0.0028,
+      "p50": 0.0036,
+      "p75": 0.0047,
+      "max": 0.0368
+    },
+    "http_5xx_rate": {
+      "unit": "fraction",
+      "count": 14400,
+      "mean": 0.0028,
+      "std": 0.0088,
+      "min": 0.0,
+      "p25": 0.0006,
+      "p50": 0.0009,
+      "p75": 0.0011,
+      "max": 0.0615
+    },
+    "db_connections": {
+      "unit": "count",
+      "count": 14400,
+      "mean": 48.5435,
+      "std": 22.0275,
+      "min": 18.8887,
+      "p25": 31.7926,
+      "p50": 40.2016,
+      "p75": 62.8423,
+      "max": 148.6288
+    },
+    "db_connection_usage_pct": {
+      "unit": "%",
+      "count": 14400,
+      "mean": 33.538,
+      "std": 8.5368,
+      "min": 19.6816,
+      "p25": 27.1104,
+      "p50": 30.4459,
+      "p75": 39.8853,
+      "max": 77.6
+    },
+    "container_restarts": {
+      "unit": "count",
+      "count": 14400,
+      "mean": 0.3668,
+      "std": 0.9657,
+      "min": 0.0,
+      "p25": 0.0,
+      "p50": 0.0,
+      "p75": 0.0,
+      "max": 4.0
+    },
+    "healthy": {
+      "unit": "",
+      "count": 14400,
+      "mean": 0.9175,
+      "std": 0.2751,
+      "min": 0.0,
+      "p25": 1.0,
+      "p50": 1.0,
+      "p75": 1.0,
+      "max": 1.0
+    }
+  }
+}

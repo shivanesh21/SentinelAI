@@ -2,14 +2,45 @@
 services:
   - name: payment-api
     replicas: 3
+    profile:
+      base_cpu: 45.0
+      base_mem: 52.0
+      base_req_rps: 280.0
+      base_latency_ms: 140.0
+      base_db_connections: 80.0
+      base_db_usage_pct: 45.0
   - name: order-service
     replicas: 2
+    profile:
+      base_cpu: 38.0
+      base_mem: 47.0
+      base_req_rps: 220.0
+      base_latency_ms: 160.0
+      base_db_connections: 60.0
+      base_db_usage_pct: 38.0
   - name: inventory-service
     replicas: 2
+    profile:
+      base_cpu: 30.0
+      base_mem: 40.0
+      base_disk: 35.0
+      base_req_rps: 120.0
+      base_latency_ms: 110.0
   - name: auth-service
     replicas: 3
+    profile:
+      base_cpu: 28.0
+      base_mem: 44.0
+      base_req_rps: 190.0
+      base_latency_ms: 95.0
   - name: notification-worker
     replicas: 2
+    profile:
+      base_cpu: 22.0
+      base_mem: 38.0
+      base_req_rps: 90.0
+      base_latency_ms: 80.0
+      base_4xx: 0.006
 
 # Failure scenarios that the telemetry simulator can inject (for labeled ground truth)
 failure_scenarios:

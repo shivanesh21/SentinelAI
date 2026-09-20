@@ -1,0 +1,159 @@
+{
+  "label": "failure_in_next_10min",
+  "contamination": 0.05,
+  "feature_count": 26,
+  "models": {
+    "zscore": {
+      "threshold": 3.455231,
+      "splits": {
+        "val": {
+          "threshold": 3.455231,
+          "positives": 270,
+          "predicted_positives": 276,
+          "precision": 0.5761,
+          "recall": 0.5889,
+          "f1": 0.5824,
+          "roc_auc": 0.8678,
+          "pr_auc": 0.5279
+        },
+        "test": {
+          "threshold": 3.455231,
+          "positives": 328,
+          "predicted_positives": 743,
+          "precision": 0.249,
+          "recall": 0.564,
+          "f1": 0.3455,
+          "roc_auc": 0.6714,
+          "pr_auc": 0.4708
+        }
+      }
+    },
+    "iqr": {
+      "threshold": 25.882564,
+      "splits": {
+        "val": {
+          "threshold": 25.882564,
+          "positives": 270,
+          "predicted_positives": 119,
+          "precision": 0.8908,
+          "recall": 0.3926,
+          "f1": 0.545,
+          "roc_auc": 0.8952,
+          "pr_auc": 0.7575
+        },
+        "test": {
+          "threshold": 25.882564,
+          "positives": 328,
+          "predicted_positives": 286,
+          "precision": 0.9021,
+          "recall": 0.7866,
+          "f1": 0.8404,
+          "roc_auc": 0.9239,
+          "pr_auc": 0.8458
+        }
+      }
+    },
+    "rolling_iqr": {
+      "threshold": 5.164041,
+      "splits": {
+        "val": {
+          "threshold": 5.164041,
+          "positives": 270,
+          "predicted_positives": 137,
+          "precision": 0.7883,
+          "recall": 0.4,
+          "f1": 0.5307,
+          "roc_auc": 0.6782,
+          "pr_auc": 0.4876
+        },
+        "test": {
+          "threshold": 5.164041,
+          "positives": 328,
+          "predicted_positives": 120,
+          "precision": 0.7917,
+          "recall": 0.2896,
+          "f1": 0.4241,
+          "roc_auc": 0.6784,
+          "pr_auc": 0.4426
+        }
+      }
+    },
+    "isolation_forest": {
+      "threshold": 0.533186,
+      "splits": {
+        "val": {
+          "threshold": 0.533186,
+          "positives": 270,
+          "predicted_positives": 347,
+          "precision": 0.585,
+          "recall": 0.7519,
+          "f1": 0.658,
+          "roc_auc": 0.8996,
+          "pr_auc": 0.7462
+        },
+        "test": {
+          "threshold": 0.533186,
+          "positives": 328,
+          "predicted_positives": 1375,
+          "precision": 0.2051,
+          "recall": 0.8598,
+          "f1": 0.3312,
+          "roc_auc": 0.8461,
+          "pr_auc": 0.6773
+        }
+      }
+    },
+    "autoencoder": {
+      "threshold": 1.810924,
+      "splits": {
+        "val": {
+          "threshold": 1.810924,
+          "positives": 270,
+          "predicted_positives": 221,
+          "precision": 0.9412,
+          "recall": 0.7704,
+          "f1": 0.8473,
+          "roc_auc": 0.9437,
+          "pr_auc": 0.8789
+        },
+        "test": {
+          "threshold": 1.810924,
+          "positives": 328,
+          "predicted_positives": 275,
+          "precision": 0.96,
+          "recall": 0.8049,
+          "f1": 0.8756,
+          "roc_auc": 0.9308,
+          "pr_auc": 0.8984
+        }
+      }
+    },
+    "lstm_autoencoder": {
+      "threshold": 4.028439,
+      "splits": {
+        "val": {
+          "threshold": 4.028439,
+          "positives": 270,
+          "predicted_positives": 130,
+          "precision": 0.8077,
+          "recall": 0.3889,
+          "f1": 0.525,
+          "roc_auc": 0.8582,
+          "pr_auc": 0.6799
+        },
+        "test": {
+          "threshold": 4.028439,
+          "positives": 328,
+          "predicted_positives": 287,
+          "precision": 0.8118,
+          "recall": 0.7104,
+          "f1": 0.7577,
+          "roc_auc": 0.9603,
+          "pr_auc": 0.7909
+        }
+      }
+    }
+  },
+  "scored_rows": 33960,
+  "scores_output": "C:\\Users\\SHIVANESH\\Desktop\\sentinelAI\\data\\features\\anomaly_scores.parquet"
+}

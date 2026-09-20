@@ -1,0 +1,34 @@
+{
+  "threshold": 0.6555120328366308,
+  "feature_columns": [
+    "CPU_5min_avg",
+    "CPU_10min_avg",
+    "CPU_15min_avg",
+    "Memory_5min_avg",
+    "Memory_10min_avg",
+    "Memory_15min_avg",
+    "Latency_5min_avg",
+    "Latency_10min_avg",
+    "Latency_15min_avg",
+    "Disk_5min_avg",
+    "Disk_10min_avg",
+    "Disk_15min_avg",
+    "DB_usage_5min_avg",
+    "DB_usage_10min_avg",
+    "DB_usage_15min_avg",
+    "Network_in_5min_avg",
+    "Network_in_10min_avg",
+    "Network_in_15min_avg",
+    "CPU_growth_rate",
+    "Memory_growth_rate",
+    "Disk_growth_rate",
+    "DB_usage_growth_rate",
+    "Error_rate",
+    "Request_rate",
+    "CPU_memory_ratio",
+    "latency_per_request"
+  ],
+  "meta": {
+    "model_name": "random_forest"
+  }
+}
