@@ -1,0 +1,11 @@
+incident_id,service,scenario_type,start_ts,end_ts
+1,payment-api,memory_leak,2026-09-18T08:05:38+00:00,2026-09-18T10:05:38+00:00
+2,payment-api,connection_pool_exhaustion,2026-09-18T12:05:38+00:00,2026-09-18T13:05:38+00:00
+3,order-service,latency_spike,2026-09-18T13:45:38+00:00,2026-09-18T14:05:38+00:00
+4,notification-worker,network_partition,2026-09-18T15:05:38+00:00,2026-09-18T15:30:38+00:00
+5,inventory-service,disk_fill,2026-09-18T16:05:38+00:00,2026-09-18T18:05:38+00:00
+6,payment-api,memory_leak,2026-09-18T20:05:38+00:00,2026-09-18T22:05:38+00:00
+7,payment-api,connection_pool_exhaustion,2026-09-19T00:05:38+00:00,2026-09-19T01:05:38+00:00
+8,order-service,latency_spike,2026-09-19T01:45:38+00:00,2026-09-19T02:05:38+00:00
+9,notification-worker,network_partition,2026-09-19T03:05:38+00:00,2026-09-19T03:30:38+00:00
+10,inventory-service,disk_fill,2026-09-19T04:05:38+00:00,2026-09-19T06:05:38+00:00

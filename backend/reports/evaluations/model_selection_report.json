@@ -1,0 +1,168 @@
+{
+  "selection_criteria": "highest val F1 for single model; fused engine for production",
+  "best_single_model": {
+    "name": "Logistic Regression",
+    "val_f1": 0.896414342629482,
+    "test_f1": 0.8170212765957446
+  },
+  "production_model": "RiskEngine",
+  "production_metrics": {
+    "val": {
+      "accuracy": 0.8982014388489209,
+      "precision": 0.4861407249466951,
+      "recall": 0.8444444444444444,
+      "f1": 0.6170500676589986,
+      "roc_auc": 0.947087206728641,
+      "pr_auc": 0.8778406267568212,
+      "positive_rate": 0.09712230215827339,
+      "predicted_positive_rate": 0.16870503597122302
+    },
+    "test": {
+      "accuracy": 0.8979166666666667,
+      "precision": 0.5326923076923077,
+      "recall": 0.8445121951219512,
+      "f1": 0.6533018867924528,
+      "roc_auc": 0.9193602339628413,
+      "pr_auc": 0.8584030852973227,
+      "positive_rate": 0.11388888888888889,
+      "predicted_positive_rate": 0.18055555555555555
+    }
+  },
+  "individual_models_test": {
+    "Logistic Regression": {
+      "accuracy": 0.9552083333333333,
+      "precision": 0.7639257294429708,
+      "recall": 0.8780487804878049,
+      "f1": 0.8170212765957446,
+      "roc_auc": 0.9155444797002829,
+      "pr_auc": 0.8970794009859957,
+      "positive_rate": 0.11388888888888889,
+      "predicted_positive_rate": 0.13090277777777778
+    },
+    "Random Forest": {
+      "accuracy": 0.9701388888888889,
+      "precision": 0.9583333333333334,
+      "recall": 0.7713414634146342,
+      "f1": 0.8547297297297297,
+      "roc_auc": 0.8990067570150623,
+      "pr_auc": 0.8387153891395696,
+      "positive_rate": 0.11388888888888889,
+      "predicted_positive_rate": 0.09166666666666666
+    },
+    "XGBoost": {
+      "accuracy": 0.9489583333333333,
+      "precision": 0.8521400778210116,
+      "recall": 0.6676829268292683,
+      "f1": 0.7487179487179487,
+      "roc_auc": 0.9181410801666794,
+      "pr_auc": 0.8229177974205886,
+      "positive_rate": 0.11388888888888889,
+      "predicted_positive_rate": 0.08923611111111111
+    },
+    "LightGBM": {
+      "accuracy": 0.9395833333333333,
+      "precision": 0.7692307692307693,
+      "recall": 0.6707317073170732,
+      "f1": 0.7166123778501629,
+      "roc_auc": 0.928888867650432,
+      "pr_auc": 0.8217018890680915,
+      "positive_rate": 0.11388888888888889,
+      "predicted_positive_rate": 0.09930555555555555
+    },
+    "LSTM (seq_len=10)": {
+      "accuracy": 0.7894179894179895,
+      "precision": 0.33291925465838507,
+      "recall": 0.8170731707317073,
+      "f1": 0.4730803177405119,
+      "roc_auc": 0.9085426659013299,
+      "pr_auc": 0.8334428370573644,
+      "positive_rate": 0.11569664902998236,
+      "predicted_positive_rate": 0.2839506172839506
+    }
+  },
+  "individual_models_val": {
+    "Logistic Regression": {
+      "accuracy": 0.981294964028777,
+      "precision": 0.9698275862068966,
+      "recall": 0.8333333333333334,
+      "f1": 0.896414342629482,
+      "roc_auc": 0.9593079533716985,
+      "pr_auc": 0.8982449218386498,
+      "positive_rate": 0.09712230215827339,
+      "predicted_positive_rate": 0.08345323741007195
+    },
+    "Random Forest": {
+      "accuracy": 0.9798561151079137,
+      "precision": 0.9953703703703703,
+      "recall": 0.7962962962962963,
+      "f1": 0.8847736625514403,
+      "roc_auc": 0.9158410801239487,
+      "pr_auc": 0.8541277523155504,
+      "positive_rate": 0.09712230215827339,
+      "predicted_positive_rate": 0.0776978417266187
+    },
+    "XGBoost": {
+      "accuracy": 0.9726618705035971,
+      "precision": 0.9663461538461539,
+      "recall": 0.7444444444444445,
+      "f1": 0.8410041841004184,
+      "roc_auc": 0.8897919433377599,
+      "pr_auc": 0.8370194113709195,
+      "positive_rate": 0.09712230215827339,
+      "predicted_positive_rate": 0.07482014388489208
+    },
+    "LightGBM": {
+      "accuracy": 0.9787769784172662,
+      "precision": 0.9688888888888889,
+      "recall": 0.8074074074074075,
+      "f1": 0.8808080808080808,
+      "roc_auc": 0.8671491810535634,
+      "pr_auc": 0.8435424492120156,
+      "positive_rate": 0.09712230215827339,
+      "predicted_positive_rate": 0.08093525179856115
+    },
+    "LSTM (seq_len=10)": {
+      "accuracy": 0.970018281535649,
+      "precision": 0.8594377510040161,
+      "recall": 0.8199233716475096,
+      "f1": 0.8392156862745098,
+      "roc_auc": 0.9839867185781941,
+      "pr_auc": 0.9126153855628552,
+      "positive_rate": 0.09542961608775137,
+      "predicted_positive_rate": 0.09104204753199269
+    }
+  },
+  "tuning_summary": {
+    "lstm_best_config": {
+      "seq_len": 10,
+      "lstm_units": 32,
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "epochs": 40,
+      "batch_size": 128,
+      "patience": 5,
+      "seed": 42
+    },
+    "xgboost_best_params": {
+      "subsample": 0.9,
+      "reg_lambda": 2.0,
+      "reg_alpha": 0.0,
+      "n_estimators": 300,
+      "min_child_weight": 3,
+      "max_depth": 5,
+      "learning_rate": 0.05,
+      "colsample_bytree": 0.8
+    },
+    "lightgbm_best_params": {
+      "subsample": 0.8,
+      "reg_lambda": 0.5,
+      "reg_alpha": 0.0,
+      "num_leaves": 31,
+      "n_estimators": 500,
+      "min_child_samples": 10,
+      "max_depth": 8,
+      "learning_rate": 0.05,
+      "colsample_bytree": 0.9
+    }
+  }
+}

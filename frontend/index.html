@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SentinelAI &mdash; Operations Dashboard</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">&#9679;</span>
+      <span>SentinelAI</span>
+    </div>
+    <nav class="nav">
+      <a href="#overview" class="active">Overview</a>
+      <a href="#services">Services</a>
+      <a href="#incidents">Incidents</a>
+      <a href="#anomalies">Anomalies</a>
+    </nav>
+    <div class="conn" id="conn">connecting&hellip;</div>
+  </header>
+
+  <main>
+    <section id="overview">
+      <h1>Platform Overview</h1>
+      <div class="cards" id="cards">
+        <div class="card status unknown"><h3>API</h3><p class="value" id="v-api">&mdash;</p><p class="sub">waiting for backend</p></div>
+        <div class="card"><h3>Feature Table</h3><p class="value" id="v-rows">&mdash;</p><p class="sub" id="s-rows">rows</p></div>
+        <div class="card"><h3>Services</h3><p class="value" id="v-services">&mdash;</p><p class="sub">tracked</p></div>
+        <div class="card"><h3>Prediction Window</h3><p class="value" id="v-window">&mdash;</p><p class="sub">minutes ahead</p></div>
+      </div>
+    </section>
+
+    <section id="splits">
+      <h2>Dataset Splits</h2>
+      <table id="split-table">
+        <thead><tr><th>Split</th><th>Rows</th><th>Positive Rate</th></tr></thead>
+        <tbody><tr><td colspan="3">no data</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="services">
+      <h2>Services</h2>
+      <div class="chips" id="service-chips"><span class="chip muted">loading&hellip;</span></div>
+    </section>
+
+    <section id="incidents">
+      <h2>Incidents</h2>
+      <p class="hint">Live incident feed is wired in as the backend prediction and RCA modules come online.</p>
+    </section>
+
+    <section id="anomalies">
+      <h2>Anomaly Signals</h2>
+      <p class="hint">Anomaly levels (NORMAL / WARNING / ANOMALOUS / CRITICAL) will render here from the anomaly module.</p>
+    </section>
+  </main>
+
+  <footer>SentinelAI &middot; predictive incident detection</footer>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+{
+  "components": {
+    "failure_probability": 0.4,
+    "error_rate": 0.15,
+    "latency_trend": 0.1,
+    "memory_growth": 0.1
+  },
+  "effective_weights": {
+    "failure_probability": 0.5333333333333333,
+    "error_rate": 0.19999999999999998,
+    "latency_trend": 0.13333333333333333,
+    "memory_growth": 0.13333333333333333
+  },
+  "severity_thresholds": {
+    "WARNING": 0.4,
+    "ANOMALOUS": 0.65,
+    "CRITICAL": 0.85
+  },
+  "signal_map": {
+    "error_rate": "Error_rate",
+    "latency_trend": "Latency_15min_avg",
+    "memory_growth": "Memory_growth_rate"
+  },
+  "splits": {
+    "val": {
+      "rows": 2780,
+      "positive_rate": 0.0971,
+      "level_distribution": {
+        "NORMAL": 2311,
+        "WARNING": 241,
+        "ANOMALOUS": 25,
+        "CRITICAL": 203
+      },
+      "risk_detection": {
+        "accuracy": 0.8982014388489209,
+        "precision": 0.4861407249466951,
+        "recall": 0.8444444444444444,
+        "f1": 0.6170500676589986,
+        "roc_auc": 0.947087206728641,
+        "pr_auc": 0.8778406267568212,
+        "positive_rate": 0.09712230215827339,
+        "predicted_positive_rate": 0.16870503597122302
+      },
+      "mean_lead_time_min": 396.0
+    },
+    "test": {
+      "rows": 2880,
+      "positive_rate": 0.1139,
+      "level_distribution": {
+        "NORMAL": 2360,
+        "WARNING": 250,
+        "ANOMALOUS": 70,
+        "CRITICAL": 200
+      },
+      "risk_detection": {
+        "accuracy": 0.8979166666666667,
+        "precision": 0.5326923076923077,
+        "recall": 0.8445121951219512,
+        "f1": 0.6533018867924528,
+        "roc_auc": 0.9193602339628413,
+        "pr_auc": 0.8584030852973227,
+        "positive_rate": 0.11388888888888889,
+        "predicted_positive_rate": 0.18055555555555555
+      },
+      "mean_lead_time_min": 108.0
+    }
+  }
+}

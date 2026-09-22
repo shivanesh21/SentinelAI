@@ -1,0 +1,274 @@
+{
+  "logistic_regression": {
+    "val": {
+      "model_name": "logistic_regression",
+      "split": "val",
+      "threshold": 0.7041874831820049,
+      "metrics": {
+        "accuracy": 0.981294964028777,
+        "precision": 0.9698275862068966,
+        "recall": 0.8333333333333334,
+        "f1": 0.896414342629482,
+        "roc_auc": 0.9593079533716985,
+        "pr_auc": 0.8982449218386498,
+        "positive_rate": 0.09712230215827339,
+        "predicted_positive_rate": 0.08345323741007195
+      },
+      "feature_importance": [
+        {
+          "feature": "Memory_5min_avg",
+          "importance": 5.59564575718655
+        },
+        {
+          "feature": "Latency_15min_avg",
+          "importance": -4.2579108230627405
+        },
+        {
+          "feature": "Request_rate",
+          "importance": -4.199568008745912
+        },
+        {
+          "feature": "Latency_5min_avg",
+          "importance": 3.8374153199415364
+        },
+        {
+          "feature": "Error_rate",
+          "importance": 2.7675606206764174
+        },
+        {
+          "feature": "CPU_15min_avg",
+          "importance": 2.7349662717497294
+        },
+        {
+          "feature": "Memory_15min_avg",
+          "importance": -2.4931352190768097
+        },
+        {
+          "feature": "latency_per_request",
+          "importance": 1.9975481706800615
+        },
+        {
+          "feature": "DB_usage_15min_avg",
+          "importance": 1.8017374171446956
+        },
+        {
+          "feature": "Disk_15min_avg",
+          "importance": -1.5073300935809077
+        },
+        {
+          "feature": "Disk_5min_avg",
+          "importance": 1.2026193369726046
+        },
+        {
+          "feature": "DB_usage_5min_avg",
+          "importance": -1.071817814009947
+        },
+        {
+          "feature": "Disk_growth_rate",
+          "importance": 1.0548026919102635
+        },
+        {
+          "feature": "Network_in_15min_avg",
+          "importance": 1.016123296339519
+        },
+        {
+          "feature": "DB_usage_10min_avg",
+          "importance": -0.8658614336785709
+        },
+        {
+          "feature": "CPU_5min_avg",
+          "importance": -0.8266662417681996
+        },
+        {
+          "feature": "Network_in_10min_avg",
+          "importance": 0.7283618915411839
+        },
+        {
+          "feature": "Memory_10min_avg",
+          "importance": 0.5043075229778184
+        },
+        {
+          "feature": "Latency_10min_avg",
+          "importance": -0.4762700850371266
+        },
+        {
+          "feature": "Memory_growth_rate",
+          "importance": 0.284375924320726
+        },
+        {
+          "feature": "CPU_10min_avg",
+          "importance": 0.26662412329371754
+        },
+        {
+          "feature": "CPU_memory_ratio",
+          "importance": -0.2656364524059351
+        },
+        {
+          "feature": "Network_in_5min_avg",
+          "importance": -0.214080446077965
+        },
+        {
+          "feature": "CPU_growth_rate",
+          "importance": 0.09704577627974581
+        },
+        {
+          "feature": "Disk_10min_avg",
+          "importance": -0.06982877024582032
+        },
+        {
+          "feature": "DB_usage_growth_rate",
+          "importance": 0.01343412255973668
+        }
+      ]
+    },
+    "test": {
+      "threshold": 0.7041874831820049,
+      "metrics": {
+        "accuracy": 0.9552083333333333,
+        "precision": 0.7639257294429708,
+        "recall": 0.8780487804878049,
+        "f1": 0.8170212765957446,
+        "roc_auc": 0.9155444797002829,
+        "pr_auc": 0.8970794009859957,
+        "positive_rate": 0.11388888888888889,
+        "predicted_positive_rate": 0.13090277777777778
+      }
+    }
+  },
+  "random_forest": {
+    "val": {
+      "model_name": "random_forest",
+      "split": "val",
+      "threshold": 0.6555120328366308,
+      "metrics": {
+        "accuracy": 0.9798561151079137,
+        "precision": 0.9953703703703703,
+        "recall": 0.7962962962962963,
+        "f1": 0.8847736625514403,
+        "roc_auc": 0.9158410801239487,
+        "pr_auc": 0.8541277523155504,
+        "positive_rate": 0.09712230215827339,
+        "predicted_positive_rate": 0.0776978417266187
+      },
+      "feature_importance": [
+        {
+          "feature": "Latency_5min_avg",
+          "importance": 0.1500145889136459
+        },
+        {
+          "feature": "Latency_10min_avg",
+          "importance": 0.10509140397654945
+        },
+        {
+          "feature": "Latency_15min_avg",
+          "importance": 0.0978299674049101
+        },
+        {
+          "feature": "Error_rate",
+          "importance": 0.0761700113013941
+        },
+        {
+          "feature": "Memory_5min_avg",
+          "importance": 0.06352020199467581
+        },
+        {
+          "feature": "Memory_15min_avg",
+          "importance": 0.05402915894308335
+        },
+        {
+          "feature": "Memory_10min_avg",
+          "importance": 0.05172591202092626
+        },
+        {
+          "feature": "CPU_15min_avg",
+          "importance": 0.047893420575419225
+        },
+        {
+          "feature": "DB_usage_15min_avg",
+          "importance": 0.04484822653271218
+        },
+        {
+          "feature": "CPU_10min_avg",
+          "importance": 0.04018732357551619
+        },
+        {
+          "feature": "Network_in_15min_avg",
+          "importance": 0.03051850471563156
+        },
+        {
+          "feature": "Request_rate",
+          "importance": 0.0302122235267678
+        },
+        {
+          "feature": "DB_usage_10min_avg",
+          "importance": 0.028122260346080577
+        },
+        {
+          "feature": "Network_in_10min_avg",
+          "importance": 0.027396096016183903
+        },
+        {
+          "feature": "latency_per_request",
+          "importance": 0.02271926709741374
+        },
+        {
+          "feature": "CPU_5min_avg",
+          "importance": 0.019069182513350463
+        },
+        {
+          "feature": "Disk_5min_avg",
+          "importance": 0.018592509276140153
+        },
+        {
+          "feature": "Disk_15min_avg",
+          "importance": 0.018148689264917497
+        },
+        {
+          "feature": "Disk_10min_avg",
+          "importance": 0.018074656199923
+        },
+        {
+          "feature": "DB_usage_5min_avg",
+          "importance": 0.01786273710221728
+        },
+        {
+          "feature": "Disk_growth_rate",
+          "importance": 0.016749651631384952
+        },
+        {
+          "feature": "Network_in_5min_avg",
+          "importance": 0.015507338039409114
+        },
+        {
+          "feature": "CPU_memory_ratio",
+          "importance": 0.0020044133027756436
+        },
+        {
+          "feature": "DB_usage_growth_rate",
+          "importance": 0.001751617186959206
+        },
+        {
+          "feature": "Memory_growth_rate",
+          "importance": 0.0016555603289321152
+        },
+        {
+          "feature": "CPU_growth_rate",
+          "importance": 0.00030507821308041607
+        }
+      ]
+    },
+    "test": {
+      "threshold": 0.6555120328366308,
+      "metrics": {
+        "accuracy": 0.9701388888888889,
+        "precision": 0.9583333333333334,
+        "recall": 0.7713414634146342,
+        "f1": 0.8547297297297297,
+        "roc_auc": 0.8990067570150623,
+        "pr_auc": 0.8387153891395696,
+        "positive_rate": 0.11388888888888889,
+        "predicted_positive_rate": 0.09166666666666666
+      }
+    }
+  }
+}

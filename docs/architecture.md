@@ -90,13 +90,27 @@ This document is the Day 1 deliverable: a working system design derived from the
 
 ## 3. Runtime Layout
 
+The repository is a monorepo split into a backend (server) and a frontend (client):
+
 | Layer | Tech |
 |---|---|
-| API | FastAPI (`src/api`) |
-| Dashboard | Streamlit (`dashboard/`) |
-| Experiment tracking | MLflow (`mlruns/`) |
-| Storage | Parquet/CSV partitions under `data/` (no external DB for scope) |
+| Backend package | Python package (`backend/src`) |
+| API | FastAPI (`backend/src/api/main.py`) |
+| CLI / pipeline scripts | `backend/scripts` |
+| Web client (frontend) | Static HTML/CSS/JS served by FastAPI (`frontend/`) |
+| Experiment tracking | MLflow (`backend/mlruns/`) |
+| Storage | Parquet/CSV partitions under `backend/data/` (no external DB for scope) |
 | Deep learning | TensorFlow/Keras |
+
+```
+sentinelAI/
+  backend/      # server: src/, scripts/, config/, data/, models/, reports/, mlruns/, tests/
+  frontend/     # client: static web app (index.html + assets), served at /
+  docs/         # platform documentation
+```
+
+Run the backend from `backend/`: `python -m uvicorn src.api.main:app --reload --port 8000`.
+The single FastAPI process serves both the JSON API (`/api/*`) and the static client at `/`.
 
 ## 4. Data Flow (end-to-end path)
 
@@ -106,5 +120,6 @@ Orchestrated by `src/pipeline/orchestrator.py` (Day 24 integration point).
 
 ## 5. Deployment Model
 Single-host demonstration stack:
-- `source` files as Python package; scripts in `scripts/` for generation/training/pipeline execution.
+- Backend package under `backend/src`; scripts in `backend/scripts` for generation/training/pipeline execution (path-independent: they resolve the backend root from their own location).
+- The FastAPI app (`backend/src/api/main.py`) exposes `/api/*` and serves the static web client from `frontend/`.
 - Services run in the same process; the Docker action wrapper targets the Docker Engine API for remediation demos with a mock fallback so the full flow runs without Docker.

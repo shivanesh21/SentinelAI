@@ -1,0 +1,30 @@
+# Core data
+numpy>=1.26
+# Pinned: the 3.0.6 wheel is blocked by the host Windows Application Control policy
+pandas==3.0.5
+pyarrow
+
+# ML models
+# Pinned: the 1.9.1 wheel ships a DLL blocked by the host Application Control policy
+scikit-learn==1.8.0
+xgboost>=2.0
+lightgbm>=4.0
+
+# Deep learning (LSTM autoencoder / LSTM classifier)
+tensorflow>=2.15
+
+# MLOps
+mlflow>=2.10
+scipy
+
+# API
+fastapi>=0.111
+uvicorn[standard]
+pydantic>=2.0
+
+# LLM root-cause analysis
+anthropic
+
+# Container automation (remediation)
+docker>=7.1
+requests

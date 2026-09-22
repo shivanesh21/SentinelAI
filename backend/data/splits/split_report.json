@@ -1,0 +1,33 @@
+{
+  "strategy": "time_based",
+  "purge_ticks": 20,
+  "boundaries": {
+    "train_end": "2026-09-18T21:19:08+00:00",
+    "val_start": "2026-09-18T21:29:08+00:00",
+    "val_end": "2026-09-19T02:07:08+00:00",
+    "test_start": "2026-09-19T02:17:08+00:00"
+  },
+  "counts": {
+    "train": 8540,
+    "val": 2780,
+    "test": 2880
+  },
+  "services": {
+    "train": 5,
+    "val": 5,
+    "test": 5
+  },
+  "positive_rates": {
+    "train": {
+      "failure_in_next_10min": 0.111475
+    },
+    "val": {
+      "failure_in_next_10min": 0.097122
+    },
+    "test": {
+      "failure_in_next_10min": 0.113889
+    }
+  },
+  "overlap_rows": 0,
+  "chronological": true
+}
