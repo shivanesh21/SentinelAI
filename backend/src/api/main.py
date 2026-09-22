@@ -10,7 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from src.features.store import FeatureStore
+from src.evidence import EvidenceAssembler
 from src.risk import RiskEngine
+from src.rca import RCAClient
 from src.telemetry.config import load_settings
 
 BACKEND = Path(__file__).resolve().parents[2]
@@ -145,6 +147,40 @@ def risk_score(payload: dict) -> dict:
         engine = _get_risk_engine()
         latest = _jsonable_rows(engine.latest_by_service(df))
         return {"services": latest, "n_flagged": sum(int(x["risk"]) for x in latest)}
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post("/api/rca")
+def rca_analyze(payload: dict) -> dict:
+    """Assemble evidence for the given rows, then run RCA on the highest-risk
+    service. Falls back to the deterministic heuristic when no LLM is configured."""
+    rows = payload.get("rows")
+    if not rows:
+        raise HTTPException(status_code=400, detail="body must include a non-empty 'rows' list")
+    try:
+        df = pd.DataFrame(rows)
+        df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True, format="mixed")
+        engine = _get_risk_engine()
+        missing = set(engine.feature_columns) - set(df.columns)
+        if missing:
+            raise ValueError(f"missing required columns: {sorted(missing)}")
+
+        assembler = EvidenceAssembler(engine, threshold=0.40, feature_columns=engine.feature_columns)
+        packages = assembler.assemble(df)
+        if not packages:
+            return {"analyzed": False, "reason": "no risk crossing the threshold"}
+
+        package = packages[0]
+        client = RCAClient()
+        finding = client.analyze(package.to_dict())
+
+        return {
+            "analyzed": True,
+            "provider": client.provider,
+            "evidence": package.to_dict(),
+            "rca": finding.to_dict(),
+        }
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

@@ -1,7 +1,7 @@
 # Core data
 numpy>=1.26
-# Pinned: the 3.0.6 wheel is blocked by the host Windows Application Control policy
-pandas==3.0.5
+# Pinned: 3.x wheels blocked by Windows Application Control policy
+pandas==2.2.3
 pyarrow
 
 # ML models

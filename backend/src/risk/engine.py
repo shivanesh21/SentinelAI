@@ -34,6 +34,13 @@ def level_from_score(score: float, thresholds: dict[str, float]) -> str:
     return "NORMAL"
 
 
+def format_risk(score: float, thresholds: dict[str, float]) -> str:
+    """Return formatted string like 'INCIDENT RISK 91% — CRITICAL'."""
+    level = level_from_score(score, thresholds)
+    pct = int(round(score * 100))
+    return f"INCIDENT RISK {pct}% — {level}"
+
+
 def _percentile_scores(values: np.ndarray, reference_sorted: np.ndarray) -> np.ndarray:
     if reference_sorted.size == 0:
         return np.full(len(values), np.nan, dtype=float)
