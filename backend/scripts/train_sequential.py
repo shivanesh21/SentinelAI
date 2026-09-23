@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+from dataclasses import asdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,6 +12,13 @@ if str(ROOT) not in sys.path:
 import numpy as np
 
 from src.features.store import FeatureStore
+from src.mlops import (
+    Experiment,
+    ExperimentStore,
+    dataset_version,
+    registry_from_settings,
+    write_stamp,
+)
 from src.models.sequential import (
     SequentialLSTMClassifier,
     build_sequences,
@@ -98,6 +106,40 @@ def main():
     model_dir = ROOT / "models" / "prediction" / "lstm_classifier"
     model.save(model_dir)
     print(f"Saved to {model_dir}")
+
+    split_report = json.loads((ROOT / "data" / "splits" / "split_report.json").read_text(encoding="utf-8"))
+    feature_meta = store.load_table_meta()
+    version = dataset_version(feature_meta, split_report)
+    registry = ExperimentStore(registry_from_settings(settings, ROOT))
+    dataset_summary = {
+        "rows": {name: int(seq[name][0].shape[0]) for name in seq},
+        "feature_columns": int(len(feature_columns)),
+        "label": label_col,
+    }
+    experiment = registry.record(
+        Experiment(
+            family="sequential",
+            model="lstm_classifier",
+            hyperparameters={**asdict(config), "epochs_run": epochs_run},
+            metrics={
+                "val": val_eval["metrics"],
+                "val_threshold": float(val_eval["threshold"]),
+                "test": test_eval["metrics"],
+                "threshold": float(test_eval["threshold"]),
+            },
+            dataset_version=version,
+            model_version=0,
+            model_path=str(model_dir),
+            dataset=dataset_summary,
+            notes={
+                "tune": bool(tuning_results),
+                "tuning_results": tuning_results or [],
+                "class_weight": str(model.class_weight_),
+            },
+        )
+    )
+    write_stamp(model_dir, experiment, registry_from_settings(settings, ROOT))
+    print(f"Tracked experiment {experiment.experiment_id} (v{experiment.model_version}) in {registry.registry_path}")
 
     comparison = load_tree_test_results()
     lstm_test = metric_row(test_eval)

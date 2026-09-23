@@ -11,6 +11,13 @@ if str(ROOT) not in sys.path:
 import pandas as pd
 
 from src.features.store import FeatureStore
+from src.mlops import (
+    Experiment,
+    ExperimentStore,
+    dataset_version,
+    registry_from_settings,
+    write_stamp,
+)
 from src.models.advanced import build_model_configs, evaluate_split, save_model, train_advanced
 from src.telemetry.config import load_settings
 
@@ -34,6 +41,16 @@ def main():
     print(f"Train: {len(train)}, Val: {len(val)}, Test: {len(test)}")
     print(f"Train positive rate: {train[label_col].mean():.4f}")
 
+    split_report = json.loads((ROOT / "data" / "splits" / "split_report.json").read_text(encoding="utf-8"))
+    feature_meta = store.load_table_meta()
+    version = dataset_version(feature_meta, split_report)
+    registry = ExperimentStore(registry_from_settings(settings, ROOT))
+    dataset_summary = {
+        "rows": {"train": int(len(train)), "val": int(len(val)), "test": int(len(test))},
+        "feature_columns": int(len(feature_columns)),
+        "label": label_col,
+    }
+
     model_configs = build_model_configs(settings)
 
     results = {}
@@ -54,6 +71,31 @@ def main():
         model_dir = ROOT / "models" / "advanced" / name
         save_model(model, model_dir, report.threshold, feature_columns, meta={"model_name": name, "best_params": report.best_params})
         print(f"Saved to {model_dir}")
+
+        experiment = registry.record(
+            Experiment(
+                family="advanced",
+                model=name,
+                hyperparameters=model.get_params(),
+                metrics={
+                    "val": report.metrics,
+                    "val_threshold": float(report.threshold),
+                    "test": test_metrics,
+                    "threshold": float(report.threshold),
+                },
+                dataset_version=version,
+                model_version=0,
+                model_path=str(model_dir),
+                dataset=dataset_summary,
+                notes={
+                    "tune": bool(config.tune),
+                    "best_params": report.best_params or {},
+                    "top_features": (report.feature_importance[:5] if report.feature_importance else []),
+                },
+            )
+        )
+        write_stamp(model_dir, experiment, registry_from_settings(settings, ROOT))
+        print(f"Tracked experiment {experiment.experiment_id} (v{experiment.model_version}) in {registry.registry_path}")
 
         results[name] = {
             "val": report.to_dict(),

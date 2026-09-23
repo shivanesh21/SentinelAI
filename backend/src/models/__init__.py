@@ -21,13 +21,20 @@ from .advanced import (
     train_advanced,
 )
 
-from .sequential import (
-    SequentialConfig,
-    SequentialLSTMClassifier,
-    build_sequences,
-    build_sequences_for_splits,
-    sequential_config_from_settings,
-)
+try:
+    from .sequential import (
+        SequentialConfig,
+        SequentialLSTMClassifier,
+        build_sequences,
+        build_sequences_for_splits,
+        sequential_config_from_settings,
+    )
+except ImportError:
+    SequentialConfig = None
+    SequentialLSTMClassifier = None
+    build_sequences = None
+    build_sequences_for_splits = None
+    sequential_config_from_settings = None
 
 __all__ = [
     "BaselineModelConfig",

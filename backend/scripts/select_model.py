@@ -105,6 +105,47 @@ def main() -> None:
     engine.save_calibration(ROOT / "models" / "risk" / "calibration.json")
     print(f"Production model calibration saved to {ROOT / 'models' / 'risk' / 'calibration.json'}")
 
+    from src.mlops import (
+        Experiment,
+        ExperimentStore,
+        dataset_version,
+        registry_from_settings,
+        write_stamp,
+    )
+
+    split_report = json.loads((ROOT / "data" / "splits" / "split_report.json").read_text(encoding="utf-8"))
+    feature_meta = json.loads((ROOT / "data" / "features" / "feature_table.meta.json").read_text(encoding="utf-8"))
+    version = dataset_version(feature_meta, split_report)
+    registry = ExperimentStore(registry_from_settings(settings, ROOT))
+    risk_summary = {
+        "rows": {k: v for k, v in split_report["counts"].items() if k in ("train", "val", "test")},
+        "feature_columns": int(len(feature_meta.get("feature_columns", []))),
+        "label": "failure_in_next_10min",
+    }
+    experiment = registry.record(
+        Experiment(
+            family="risk",
+            model="risk_engine",
+            hyperparameters={
+                "weights": settings["risk"]["weights"],
+                "signals": settings["risk"]["signal_map"],
+                "severity_thresholds": settings["risk"]["severity_thresholds"],
+                "calibrated_references": int(len(engine.references or [])),
+            },
+            metrics={
+                "val": risk["splits"]["val"]["risk_detection"],
+                "test": risk["splits"]["test"]["risk_detection"],
+            },
+            dataset_version=version,
+            model_version=0,
+            model_path=str(ROOT / "models" / "risk"),
+            dataset=risk_summary,
+            notes={"best_single_model": best_single[0], "selection_criteria": report["selection_criteria"]},
+        )
+    )
+    write_stamp(ROOT / "models" / "risk", experiment, registry_from_settings(settings, ROOT))
+    print(f"Tracked experiment {experiment.experiment_id} (v{experiment.model_version}) in {registry.registry_path}")
+
 
 if __name__ == "__main__":
     main()

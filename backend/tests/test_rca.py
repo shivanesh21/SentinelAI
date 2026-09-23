@@ -1,5 +1,6 @@
 import os
 import unittest
+from pathlib import Path
 
 from src.rca import (
     CAUSE_CATEGORIES,
@@ -160,6 +161,156 @@ class TestClient(unittest.TestCase):
         result = client.analyze(evidence_for("memory_leak"))
         self.assertIsInstance(result, RCAResult)
         self.assertEqual(result.root_cause_category, "memory_leak")
+
+
+class TestParsing(unittest.TestCase):
+    def test_extract_json_strips_fences(self):
+        from src.rca import extract_json, parse_result
+
+        raw = '```json\n{"probable_root_cause": "a", "confidence_score": 0.9, "recommended_action": "b"}\n```'
+        self.assertEqual(extract_json(raw)["confidence_score"], 0.9)
+        self.assertEqual(parse_result(raw).probable_root_cause, "a")
+
+    def test_extract_json_raises_without_object(self):
+        from src.rca import extract_json
+
+        with self.assertRaises(ValueError):
+            extract_json("no JSON here")
+
+    def test_parse_result_rejects_missing_keys(self):
+        from src.rca import parse_result
+
+        with self.assertRaises(ValueError):
+            parse_result('{"confidence_score": 0.5}')
+
+
+class TestAuditLogger(unittest.TestCase):
+    def test_record_and_read_round_trip(self):
+        from tempfile import TemporaryDirectory
+
+        from src.rca import AuditLogger, RCAEvent
+
+        with TemporaryDirectory() as tmp:
+            logger = AuditLogger(tmp + "/audit.jsonl")
+            event = RCAEvent(
+                request_id="abc123",
+                timestamp="2026-09-19T04:30:08+00:00",
+                provider="heuristic",
+                service="payment-api",
+                evidence={"service": "payment-api", "risk_score": 0.9},
+                result={"root_cause_category": "memory_leak"},
+                status="ok",
+                duration_ms=1.5,
+            )
+            logger.record(event)
+            records = logger.read()
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]["request_id"], "abc123")
+            self.assertEqual(records[0]["result"]["root_cause_category"], "memory_leak")
+            self.assertEqual(records[0]["provider"], "heuristic")
+
+    def test_read_limits(self):
+        from tempfile import TemporaryDirectory
+
+        from src.rca import AuditLogger, RCAEvent
+
+        with TemporaryDirectory() as tmp:
+            logger = AuditLogger(tmp + "/audit.jsonl")
+            for i in range(5):
+                logger.record(
+                    RCAEvent(
+                        request_id=f"r{i}",
+                        timestamp="t",
+                        provider="heuristic",
+                        service="s",
+                        evidence={},
+                        result=None,
+                        status="ok",
+                        duration_ms=0.0,
+                    )
+                )
+            self.assertEqual(len(logger.read(20)), 5)
+            self.assertEqual([r["request_id"] for r in logger.read(2)], ["r3", "r4"])
+            self.assertEqual(logger.read(0), [])
+
+
+class TestMalformedOutputFallback(unittest.TestCase):
+    def _broken_client(self, raw, audit=None):
+        client = RCAClient(provider="openai", audit=audit)
+        client._call_openai = lambda evidence: raw
+        return client
+
+    def test_garbage_payload_falls_back_to_heuristic(self):
+        from tempfile import TemporaryDirectory
+
+        from src.rca import AuditLogger
+
+        with TemporaryDirectory() as tmp:
+            logger = AuditLogger(tmp + "/audit.jsonl")
+            client = self._broken_client("this is not json at all", audit=logger)
+            result = client.analyze(evidence_for("network_partition"))
+            self.assertEqual(result.root_cause_category, "network_partition")
+            records = logger.read()
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]["status"], "fallback_heuristic")
+            self.assertIn("error", records[0])
+            self.assertEqual(records[0]["result"]["root_cause_category"], "network_partition")
+
+    def test_valid_but_schema_invalid_falls_back(self):
+        from tempfile import TemporaryDirectory
+
+        from src.rca import AuditLogger
+
+        with TemporaryDirectory() as tmp:
+            logger = AuditLogger(tmp + "/audit.jsonl")
+            client = self._broken_client('{"probable_root_cause": ""}', audit=logger)
+            result = client.analyze(evidence_for("disk_fill"))
+            self.assertEqual(result.root_cause_category, "disk_fill")
+            self.assertEqual(logger.read(1)[0]["status"], "fallback_heuristic")
+
+
+class TestEndToEnd(unittest.TestCase):
+    def test_risk_engine_to_rca_output(self):
+        from tempfile import TemporaryDirectory
+
+        import pandas as pd
+
+        from src.evidence import EvidenceAssembler
+        from src.risk import RiskEngine
+
+        backend = Path(__file__).resolve().parents[1]
+        models_dir = backend / "models"
+        test_parquet = backend / "data" / "splits" / "test.parquet"
+        if not (models_dir / "baseline" / "logistic_regression").exists() or not test_parquet.exists():
+            self.skipTest("trained models or test split not present")
+
+        engine = RiskEngine.load(models_dir, {})
+        test = pd.read_parquet(test_parquet)
+        slice_df = (
+            test[test["service"] == "payment-api"]
+            .sort_values("timestamp")
+            .tail(40)
+            .drop(columns=["in_failure", "time_to_failure_min"], errors="ignore")
+        )
+
+        assembler = EvidenceAssembler(engine, threshold=0.40, feature_columns=engine.feature_columns)
+        packages = assembler.assemble(slice_df)
+        if not packages:
+            self.skipTest("no risk crossing threshold in slice")
+
+        from src.rca import AuditLogger
+
+        with TemporaryDirectory() as tmp:
+            audit = AuditLogger(tmp + "/audit.jsonl")
+            client = RCAClient(audit=audit)
+            finding = client.analyze(packages[0].to_dict())
+            self.assertTrue(audit.path.exists())
+
+        self.assertIsInstance(finding, RCAResult)
+        self.assertIn(finding.root_cause_category, CAUSE_CATEGORIES)
+        self.assertTrue(finding.probable_root_cause)
+        self.assertTrue(0.0 <= finding.confidence_score <= 1.0)
+        self.assertTrue(finding.evidence)
 
 
 if __name__ == "__main__":

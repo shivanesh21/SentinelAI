@@ -69,12 +69,49 @@ risk:
     ANOMALOUS: 0.65
     CRITICAL: 0.85
 
+rca:
+  audit_log: data/rca_audit.jsonl    # JSONL audit trail of every RCA call (Module 6)
+
+remediation:                          # Module 7 action library safety
+  mode: approval                      # advisory | approval | autonomous
+  audit_log: data/remediation_audit.jsonl
+  docker_dry_run: true                # simulate Docker ops unless autonomously armed
+  approval_ttl_min: 60                # pending approvals expire after this window
+  policy:
+    autonomous_whitelist: [clear_cache]   # only safe actions run unattended
+    max_risk_autonomous: low              # never auto-run medium/high risk actions
+    max_actions_per_incident: 4           # hard cap on autonomously executed actions
+
 recovery:
   cooldown_sec: 60                  # wait after remediation before health re-check
+  metrics: [Error_rate, Latency_15min_avg, Memory_growth_rate]  # re-checked metrics
+  min_improvement: 0.05             # improvement ratio required to count as recovering
+  healthy_threshold:                # above-threshold == unhealthy (breach)
+    Error_rate: 0.02
+    Latency_15min_avg: 300.0
+    Memory_growth_rate: 0.05
+  log: data/recovery_log.jsonl      # per-check SUCCESS/FAILURE + recovery time
+
+mlops:                                # Module 9 experiment tracking & monitoring
+  registry: data/experiments.jsonl     # JSONL registry of model versions + runs
+  drift:
+    report_path: reports/evaluations/drift_monitoring_report.json
+    psi:
+      bins: 10
+      moderate_threshold: 0.10
+      significant_threshold: 0.25
+    ks:
+      alpha: 0.05
+    dataset_drift_share_threshold: 0.30
+    performance:
+      f1_drop_threshold: 0.15
+      min_f1_threshold: 0.60
+      min_samples: 50
 
 models:
   baseline:
-    logistic_regression: {}
+    logistic_regression:
+      {}
     random_forest:
       n_estimators: 200
       max_depth: 12

@@ -25,6 +25,9 @@ class Evidence:
     correlated_logs: list[dict[str, Any]]
     recommended_actions: list[str]
 
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
 
 class EvidenceAssembler:
     """Module 6: packages structured evidence when risk crosses threshold."""

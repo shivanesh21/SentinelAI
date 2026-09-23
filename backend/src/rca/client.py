@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+import time
+from datetime import datetime, timezone
 from typing import Any
 
 import requests
 
+from .audit import AuditLogger, RCAEvent, new_request_id
 from .heuristic import classify as heuristic_classify
 from .prompt import build_rca_prompt
 from .schema import RCAResult
@@ -33,34 +36,90 @@ def resolve_provider() -> str:
     return "heuristic"
 
 
+def extract_json(text: str) -> dict:
+    """Best-effort JSON extraction from an LLM response (handles stray ``` fences)."""
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+    first = cleaned.find("{")
+    last = cleaned.rfind("}")
+    if first == -1 or last == -1 or last < first:
+        raise ValueError("no JSON object found in LLM response")
+    return json.loads(cleaned[first : last + 1])
+
+
+def parse_result(raw: str) -> RCAResult:
+    """Parse and schema-validate an LLM response; raises on malformed output."""
+    return RCAResult.from_dict(extract_json(raw))
+
+
 class RCAClient:
     """Call the configured LLM to analyse an evidence package, falling back to the
-    deterministic heuristic when no provider is configured or the call fails."""
+    deterministic heuristic when no provider is configured, the call fails, or the
+    output fails schema validation. Every call is audited (input evidence + output
+    diagnosis) when an AuditLogger is attached."""
 
-    def __init__(self, provider: str | None = None):
+    def __init__(self, provider: str | None = None, audit: AuditLogger | None = None):
         self.provider = provider or resolve_provider()
+        self.audit = audit
 
-    def analyze(self, evidence: dict[str, Any] | str) -> RCAResult:
-        system, user = build_rca_prompt(evidence)
+    def analyze(
+        self,
+        evidence: dict[str, Any] | str,
+        request_id: str | None = None,
+        audit: AuditLogger | None = None,
+    ) -> RCAResult:
+        logger = audit or self.audit
+        start = time.perf_counter()
+
+        event = RCAEvent(
+            request_id=request_id or new_request_id(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            provider=self.provider,
+            service=evidence.get("service", "?") if isinstance(evidence, dict) else "?",
+            evidence=evidence if isinstance(evidence, dict) else {"evidence": str(evidence)},
+            status="ok",
+        )
+
         if self.provider == "heuristic":
-            return heuristic_classify(evidence)
+            result = heuristic_classify(evidence)
+            self._finish(event, result, start, logger)
+            return result
+
         try:
             if self.provider == "anthropic":
-                raw = self._call_anthropic(system, user)
+                raw = self._call_anthropic(evidence)
             elif self.provider == "openai":
-                raw = self._call_openai(system, user)
+                raw = self._call_openai(evidence)
             elif self.provider == "local":
-                raw = self._call_local(system, user)
+                raw = self._call_local(evidence)
             else:
-                return heuristic_classify(evidence)
-            return RCAResult.from_json(raw)
-        except Exception as exc:  # pragma: no cover - network/api failures
-            print(f"[rca] LLM call failed ({self.provider}): {exc}; using heuristic fallback")
-            return heuristic_classify(evidence)
+                result = heuristic_classify(evidence)
+                self._finish(event, result, start, logger)
+                return result
+            event.llm_raw = raw
+            result = parse_result(raw)
+            self._finish(event, result, start, logger)
+            return result
+        except Exception as exc:
+            event.status = "fallback_heuristic"
+            event.error = str(exc)
+            result = heuristic_classify(evidence)
+            self._finish(event, result, start, logger)
+            print(f"[rca] LLM call/output failed ({self.provider}): {exc}; using heuristic fallback")
+            return result
 
-    def _call_anthropic(self, system: str, user: str) -> str:
+    @staticmethod
+    def _finish(event: RCAEvent, result: RCAResult, start: float, logger: AuditLogger | None) -> None:
+        event.duration_ms = round((time.perf_counter() - start) * 1000, 3)
+        event.result = result.to_dict()
+        if logger is not None:
+            logger.record(event)
+
+    def _call_anthropic(self, evidence: dict[str, Any]) -> str:
         import anthropic
 
+        system, user = build_rca_prompt(evidence)
         client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
         response = client.messages.create(
             model=os.environ.get("ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL),
@@ -70,9 +129,10 @@ class RCAClient:
         )
         return "".join(block.text for block in response.content if block.type == "text")
 
-    def _call_openai(self, system: str, user: str) -> str:
+    def _call_openai(self, evidence: dict[str, Any]) -> str:
         from openai import OpenAI
 
+        system, user = build_rca_prompt(evidence)
         client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
         response = client.chat.completions.create(
             model=os.environ.get("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
@@ -84,7 +144,8 @@ class RCAClient:
         )
         return response.choices[0].message.content
 
-    def _call_local(self, system: str, user: str) -> str:
+    def _call_local(self, evidence: dict[str, Any]) -> str:
+        system, user = build_rca_prompt(evidence)
         url = os.environ.get("LOCAL_LLM_URL", "http://localhost:11434").rstrip("/")
         response = requests.post(
             f"{url}/api/generate",
@@ -97,14 +158,3 @@ class RCAClient:
         )
         response.raise_for_status()
         return response.json()["response"]
-
-
-def extract_json(text: str) -> dict:
-    """Best-effort JSON extraction from an LLM response (handles stray ``` fences)."""
-    cleaned = text.strip()
-    if cleaned.startswith("```"):
-        cleaned = cleaned.strip("`")
-        first = cleaned.find("{")
-        last = cleaned.rfind("}")
-        cleaned = cleaned[first : last + 1]
-    return json.loads(cleaned)

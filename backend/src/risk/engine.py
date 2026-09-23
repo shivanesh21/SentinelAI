@@ -113,7 +113,7 @@ class RiskEngine:
             feature_columns = features or feature_columns
 
         lstm_path = models_dir / "prediction" / MC
-        if lstm_path.exists():
+        if lstm_path.exists() and SequentialLSTMClassifier is not None:
             models[MC] = SequentialLSTMClassifier.load(lstm_path)
             feature_columns = feature_columns or None
 

@@ -33,18 +33,24 @@ class RCAResult:
     @classmethod
     def from_dict(cls, data: dict) -> "RCAResult":
         required = ("probable_root_cause", "confidence_score", "recommended_action")
-        if not all(k in data for k in required):
-            raise ValueError(f"missing required schema keys: {required}")
+        missing = [key for key in required if key not in data]
+        if missing:
+            raise ValueError(f"missing required schema keys: {missing}")
+        cause = str(data["probable_root_cause"]).strip()
+        if not cause:
+            raise ValueError("probable_root_cause must be a non-empty string")
         confidence = float(data["confidence_score"])
         if not 0.0 <= confidence <= 1.0:
             raise ValueError("confidence_score must be in [0, 1]")
         category = str(data.get("root_cause_category", "unknown"))
         if category not in CAUSE_CATEGORIES:
+            # guardrail: unknown/typo'd categories from the LLM are coerced,
+            # never propagated up the stack
             category = "unknown"
         return cls(
-            probable_root_cause=str(data["probable_root_cause"]),
+            probable_root_cause=cause,
             confidence_score=confidence,
-            recommended_action=str(data["recommended_action"]),
+            recommended_action=str(data["recommended_action"]).strip(),
             root_cause_category=category,
             evidence=[str(item) for item in data.get("evidence", [])],
         )
