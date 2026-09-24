@@ -5,8 +5,10 @@
 const { useState, useEffect, useCallback, useRef } = React;
 
 // ─── Config ──────────────────────────────────────────────────
-const API = "http://localhost:8000/api";
+const API = (window.SENTINEL_API_BASE || "/api").replace(/\/$/, "");
 const REFRESH_MS = 20000;
+
+const FAMILY_ICONS = { baseline: "🧱", advanced: "🚀", sequential: "🔁", risk: "🎯" };
 
 // ─── Utilities ───────────────────────────────────────────────
 function pct(v) {
@@ -711,6 +713,189 @@ function DriftTab({ drift }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// MODELS / EXPERIMENT TRACKING TAB
+// ═══════════════════════════════════════════════════════════════
+function hpSummary(hp) {
+  if (!hp || typeof hp !== "object") return "—";
+  const entries = Object.entries(hp).slice(0, 6);
+  if (entries.length === 0) return "—";
+  return entries.map(([k, v]) => {
+    let s;
+    if (Array.isArray(v)) s = `[${v.map(x => (x == null ? "" : String(x))).join(",")}]`;
+    else if (v && typeof v === "object") s = JSON.stringify(v).slice(0, 40);
+    else s = String(v);
+    return `${k}=${s}`;
+  }).join(" · ");
+}
+
+function ModelsTab() {
+  const [compare, setCompare] = useState(null);
+  const [experiments, setExperiments] = useState(null);
+  const [metric, setMetric] = useState("f1");
+  const [split, setSplit] = useState("test");
+  const [open, setOpen] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch(`/mlops/compare?metric=${metric}&split=${split}`)
+      .then(d => { if (!cancelled) setCompare(d); })
+      .catch(() => { if (!cancelled) setCompare({ best: [] }); });
+    apiFetch("/mlops/experiments?limit=200")
+      .then(d => { if (!cancelled) setExperiments(d.records || []); })
+      .catch(() => { if (!cancelled) setExperiments([]); });
+    return () => { cancelled = true; };
+  }, [metric, split]);
+
+  const best = (compare?.best) || [];
+  const champion = best[0];
+  const records = experiments || [];
+  const metricLabel = { f1: "F1", roc_auc: "ROC AUC", accuracy: "Accuracy" }[metric] || metric;
+  const METRIC_LABELS = { f1: "F1", roc_auc: "ROC AUC", accuracy: "Accuracy" };
+
+  return (
+    <div className="page-enter">
+      <div className="section-header">
+        <span className="section-title">Model Registry & Experiment Tracking</span>
+        <span className="text-muted text-xs">best per model · {split} split · dataset {compare?.dataset_version || "—"}</span>
+      </div>
+
+      <div className="kpi-grid">
+        <KpiCard icon="🧪" label="Experiments" value={records.length} sub={`${new Set(records.map(r => r.family)).size} families`} variant="info" />
+        <KpiCard icon="🏆" label="Champion" value={champion ? `${champion.model}` : "—"}
+          sub={champion ? `v${champion.model_version} · ${(champion.value * 100).toFixed(1)}% ${metricLabel}` : "no registry yet"} variant="ok" />
+        <KpiCard icon="🗃" label="Registry" value={records.length ? "OK" : "empty"} sub="backend/data/experiments.jsonl" variant={records.length ? "info" : "warn"} />
+      </div>
+
+      <div className="tabs mb-16">
+        {["f1", "roc_auc", "accuracy"].map(m => (
+          <button key={m} className={`tab-btn ${metric === m ? "active" : ""}`} onClick={() => { setMetric(m); setOpen(null); }}>
+            {metric === m ? "★ " : ""}{METRIC_LABELS[m]}
+          </button>
+        ))}
+      </div>
+
+      <Panel title={`Model Comparison — best ${metricLabel} on ${split}`} icon="⚖" badge={
+        compare?.count != null ? <span className="risk-badge normal">{compare.count} models</span> : null
+      }>
+        {best.length === 0 ? (
+          <Empty icon="🧪" msg="No experiments tracked yet. Run scripts/track_experiments.py or retrain to populate the registry." />
+        ) : (
+          <table className="service-table">
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>Model</th>
+                <th>Ver</th>
+                <th>{metricLabel}</th>
+                <th>F1</th>
+                <th>ROC AUC</th>
+                <th>Accuracy</th>
+                <th>Trained</th>
+              </tr>
+            </thead>
+            <tbody>
+              {best.map((row, i) => (
+                <tr key={`${row.family}/${row.model}`} style={i === 0 ? { background: "var(--ok-dim)" } : undefined}>
+                  <td style={{ fontWeight: 600 }}>{FAMILY_ICONS[row.family] || "⚙"} {row.family}</td>
+                  <td style={{ fontWeight: 600 }}>{row.model}</td>
+                  <td className="mono text-sm">v{row.model_version}</td>
+                  <td style={{ minWidth: 120 }}><ScoreBar value={row.value} max={1} color={row.value > 0.7 ? "var(--accent)" : "var(--warn)"} /></td>
+                  <td className="mono text-sm">{f4(row.metrics.f1)}</td>
+                  <td className="mono text-sm">{f4(row.metrics.roc_auc)}</td>
+                  <td className="mono text-sm">{f4(row.metrics.accuracy)}</td>
+                  <td className="mono text-xs text-muted">{row.trained_at ? shortTs(row.trained_at) : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Panel>
+
+      <Panel title={`All Tracked Experiments — ${records.length}`} icon="🧬" badge={
+        compare?.dataset_version ? <span className="drift-badge none">{compare.dataset_version}</span> : null
+      }>
+        {records.length === 0 ? (
+          <Empty icon="🫙" msg="Run the training pipeline (scripts/train_*.py) with tracking enabled." />
+        ) : (
+          <table className="service-table">
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>Model</th>
+                <th>Ver</th>
+                <th>Val F1</th>
+                <th>Test F1</th>
+                <th>ROC AUC</th>
+                <th>Status</th>
+                <th>Hyperparameters</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.slice().reverse().map(r => {
+                const val = r.metrics?.val || {};
+                const test = r.metrics?.test || {};
+                return (
+                  <React.Fragment key={r.experiment_id}>
+                    <tr onClick={() => setOpen(open === r.experiment_id ? null : r.experiment_id)} style={{ cursor: "pointer" }}>
+                      <td style={{ fontWeight: 600 }}>{FAMILY_ICONS[r.family] || "⚙"} {r.family}</td>
+                      <td style={{ fontWeight: 600 }}>{r.model}</td>
+                      <td className="mono text-sm">v{r.model_version}</td>
+                      <td className="mono text-sm">{f4(val.f1)}</td>
+                      <td className="mono text-sm" style={{ color: test.f1 > 0.7 ? "var(--ok)" : test.f1 > 0.5 ? "var(--warn)" : "var(--bad)" }}>{f4(test.f1)}</td>
+                      <td className="mono text-sm">{f4(test.roc_auc)}</td>
+                      <td>
+                        <span className={`risk-badge ${r.status === "ok" ? "normal" : "critical"}`}>
+                          {r.status === "ok" ? "✓" : "✕"} {r.status}
+                        </span>
+                      </td>
+                      <td className="mono text-xs text-muted">{hpSummary(r.hyperparameters)}</td>
+                    </tr>
+                    {open === r.experiment_id && (
+                      <>
+                        <tr>
+                          <td colSpan={8}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12 }}>
+                              <div className="flex-center">
+                                <span className="risk-badge normal">{r.experiment_id}</span>
+                                <span className="drift-badge none">{r.dataset_version || "—"}</span>
+                                <span className="mono text-xs text-muted">trained {r.trained_at}</span>
+                              </div>
+                              <div className="flex-center" style={{ flexWrap: "wrap", gap: 8 }}>
+                                {[["val", val], ["test", test]].map(([name, m]) => (
+                                  <div key={name} className="perf-box" style={{ minWidth: 130 }}>
+                                    <div className="perf-label">{name.toUpperCase()} split</div>
+                                    <div className="perf-value">{f4(m.f1)}</div>
+                                    <div className="text-xs text-muted">
+                                      acc {f4(m.accuracy)} · prec {f4(m.precision)} · rec {f4(m.recall)} · auc {f4(m.roc_auc)}
+                                    </div>
+                                  </div>
+                                ))}
+                                <div className="perf-box" style={{ minWidth: 130 }}>
+                                  <div className="perf-label">THRESHOLD</div>
+                                  <div className="perf-value">{f4(r.metrics.threshold)}</div>
+                                  <div className="text-xs text-muted">label: {r.metrics.label || "failure_in_next_10min"}</div>
+                                </div>
+                              </div>
+                              {r.dataset && Object.keys(r.dataset).length > 0 && (
+                                <div className="mono text-xs text-muted">dataset: {JSON.stringify(r.dataset).slice(0, 220)}</div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      </>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </Panel>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN APP
 // ═══════════════════════════════════════════════════════════════
 function App() {
@@ -773,6 +958,7 @@ function App() {
     { id: "risk",       label: "Risk Scores", icon: "⚠" },
     { id: "incidents",  label: "Incidents",   icon: "🔥" },
     { id: "remediate",  label: "Remediation", icon: "🔧" },
+    { id: "models",     label: "Models",      icon: "🧪" },
     { id: "drift",      label: "Drift & ML",  icon: "📈" },
   ];
 
@@ -821,6 +1007,7 @@ function App() {
         {tab === "risk"      && <RiskTab data={data} />}
         {tab === "incidents" && <IncidentsTab toast={toast} />}
         {tab === "remediate" && <RemediationTab toast={toast} />}
+        {tab === "models"    && <ModelsTab />}
         {tab === "drift"     && <DriftTab drift={drift} />}
       </main>
 

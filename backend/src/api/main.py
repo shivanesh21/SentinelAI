@@ -20,7 +20,8 @@ from src.remediation import (
     plan_for_category,
     policy_from_config,
 )
-from src.mlops import DriftMonitoringEngine
+from src.mlops import DriftMonitoringEngine, ExperimentStore, registry_from_settings
+from src.pipeline.e2e import SCENARIO_TYPES, PipelineEngine, configured_scenarios, generate_incident
 from src.risk import RiskEngine
 from src.rca import AuditLogger, RCAClient, new_request_id
 from src.telemetry.config import load_settings
@@ -46,13 +47,27 @@ _feature_table_cache = None
 _risk_engine = None
 _rca_service = None
 _approval_store = ApprovalStore()
+_experiment_store = None
+_drift_engine = None
+_pipeline_engine = None
+
+
+def _get_pipeline_engine() -> PipelineEngine:
+    global _pipeline_engine
+    if _pipeline_engine is None:
+        _pipeline_engine = PipelineEngine(BACKEND, settings, approval_store=_approval_store)
+    return _pipeline_engine
+
+
+def _get_experiment_store() -> ExperimentStore:
+    global _experiment_store
+    if _experiment_store is None:
+        _experiment_store = ExperimentStore(registry_from_settings(settings, BACKEND))
+    return _experiment_store
 
 
 def _get_risk_engine() -> RiskEngine:
-    global _risk_engine
-    if _risk_engine is None:
-        _risk_engine = RiskEngine.load(BACKEND / "models", settings)
-    return _risk_engine
+    return _get_pipeline_engine().risk_engine()
 
 
 def _rca_audit_path():
@@ -432,9 +447,6 @@ def recovery_history(limit: int = 20) -> dict:
     return {"records": _get_recovery_verifier().read(limit)}
 
 
-_drift_engine = None
-
-
 def _get_drift_engine() -> DriftMonitoringEngine:
     global _drift_engine
     if _drift_engine is None:
@@ -498,6 +510,117 @@ def mlops_drift_check(payload: dict) -> dict:
         return report.to_dict()
     except Exception as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/api/mlops/experiments")
+def mlops_experiments(limit: int = 200, family: str | None = None, model: str | None = None) -> dict:
+    """Experiments tracked by the Day 21 model registry: family/model/version,
+    hyperparameters, dataset version, and per-split metrics. Ordered newest last."""
+    limit = max(1, min(limit, 500))
+    store = _get_experiment_store()
+    records = store.read(limit=limit, family=family, model=model)
+    return {"count": len(records), "records": records}
+
+
+@app.get("/api/mlops/compare")
+def mlops_compare(metric: str = "f1", split: str = "test") -> dict:
+    """Best recorded performance per family/model, ranked by the given metric."""
+    store = _get_experiment_store()
+    rows = store.compare(metric=metric, split=split)
+    return {
+        "metric": metric,
+        "split": split,
+        "dataset_version": rows[0]["dataset_version"] if rows else None,
+        "count": len(rows),
+        "best": rows,
+    }
+
+
+@app.get("/api/pipeline/readiness")
+def pipeline_readiness() -> dict:
+    """Stage-by-stage readiness of the end-to-end pipeline (Day 24)."""
+    try:
+        return _get_pipeline_engine().readiness()
+    except Exception as exc:  # pragma: no cover - defensive for the demo endpoint
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/pipeline/scenarios")
+def pipeline_scenarios() -> dict:
+    """Incident scenarios + services the simulated pipeline can drive."""
+    try:
+        catalog = configured_scenarios(BACKEND / "config" / "services.yaml")
+        return {
+            "scenario_types": SCENARIO_TYPES,
+            "services": catalog["services"],
+            "config_path": "config/services.yaml",
+        }
+    except Exception as exc:  # pragma: no cover - defensive for the demo endpoint
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/pipeline/run")
+def pipeline_run(payload: dict) -> dict:
+    """Run the full Telemetry -> Features -> Anomaly+Prediction -> Risk -> RCA ->
+    Remediation -> Recovery chain. Simulates an incident by default; pass 'rows'
+    (plus optional 'recovery' rows) to score your own telemetry instead."""
+    mode = payload.get("mode")
+    if mode is not None and mode not in ("advisory", "approval", "autonomous"):
+        raise HTTPException(status_code=422, detail=f"mode must be one of advisory|approval|autonomous, got {mode!r}")
+    scenario = payload.get("scenario")
+    if scenario is not None and scenario not in SCENARIO_TYPES:
+        raise HTTPException(status_code=422, detail=f"unknown scenario {scenario!r}; use one of {SCENARIO_TYPES}")
+    services = payload.get("services")
+    if services is not None and (not isinstance(services, list) or not services):
+        raise HTTPException(status_code=422, detail="'services' must be a non-empty list of service names")
+    recovery = payload.get("recovery")
+    try:
+        duration_min = int(payload.get("duration_min", 45))
+        recovery_min = int(payload.get("recovery_min", 20))
+        interval_sec = int(payload.get("interval_sec", 30))
+        seed = int(payload.get("seed", 42))
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=f"bad numeric param: {exc}") from exc
+    rows = payload.get("rows")
+    try:
+        engine = _get_pipeline_engine()
+        if rows is None:
+            names = services
+            if names is None:
+                names = configured_scenarios(BACKEND / "config" / "services.yaml")["services"]
+            gen = generate_incident(
+                names,
+                scenario or "memory_leak",
+                duration_min=duration_min,
+                recovery_min=recovery_min,
+                interval_sec=interval_sec,
+                seed=seed,
+                services_path=BACKEND / "config" / "services.yaml",
+            )
+            before_rows, after_rows = gen["before_rows"], gen["after_rows"]
+            incident = {
+                "scenario_type": gen["scenario_type"],
+                "target_service": gen["service"],
+                "interval_sec": gen["interval_sec"],
+                "start_ts": gen["start_ts"],
+            }
+        else:
+            if not isinstance(rows, list) or not rows:
+                raise HTTPException(status_code=422, detail="'rows' must be a non-empty list of telemetry rows")
+            before_rows, after_rows = rows, recovery
+            incident = {"scenario_type": scenario or "custom_rows", "target_service": None}
+        out = engine.run(
+            before_rows,
+            mode=mode,
+            per_service=True,
+            recovery=(before_rows, after_rows) if after_rows else None,
+        )
+        out["incident"] = incident
+        return out
+    except HTTPException:
+        raise
+    except Exception as exc:  # pragma: no cover - defensive for the demo endpoint
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 if FRONTEND.exists():

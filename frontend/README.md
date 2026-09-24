@@ -19,24 +19,41 @@ build step, served by the FastAPI backend.
 
 ## API contract
 
-| Endpoint          | Purpose                                        |
-|-------------------|------------------------------------------------|
-| `GET /api/health` | Liveness check (`{status, service, time}`)     |
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/health` | Liveness check (`{status, service, time}`) |
 | `GET /api/overview` | Dataset summary: rows, services, features, splits |
+| `GET /api/risk/current` | Live risk scores + anomaly scores per service |
+| `GET /api/rca/history` | Incidents with root-cause explanations (audit trail) |
+| `POST /api/rca` | Run RCA on submitted telemetry rows |
+| `GET /api/remediate/pending` | Approvals awaiting human sign-off |
+| `POST /api/remediate/approve` | Approve + execute a pending remediation |
+| `POST /api/remediate` | End-to-end safety-mode remediation (advisory/approval/autonomous) |
+| `GET /api/recovery/history` | Recovery verifications (SUCCESS/FAILURE + recovery time) |
+| `GET /api/mlops/experiments` | Tracked experiments (Day 21 registry: versions, hyperparams, metrics) |
+| `GET /api/mlops/compare` | Best metrics per model family, ranked by metric (`f1`/`roc_auc`/`accuracy`) |
+| `GET /api/mlops/drift` | Dataset drift + degradation + retraining decision |
 
-Consumed by `assets/js/app.js`; the API base URL defaults to `http://localhost:8000/api`
-and can be overridden via `window.SENTINEL_API_BASE` before the script loads.
+Consumed by `assets/js/dashboard.jsx`; the API base URL defaults to a relative `/api`
+(works on any port the backend serves from) and can be overridden via
+`window.SENTINEL_API_BASE` before the script loads.
 
 ## Layout
 
 ```
 frontend/
-  index.html            # page shell + sections
+  index.html            # React 18 CDN + Babel shell, mounts dashboard.jsx
+  README.md
   assets/
     css/style.css       # dark operations theme
-    js/app.js           # fetch + render loop (15s refresh)
+    css/dashboard.css   # dashboard component styles
+    js/app.js           # legacy vanilla fetch/render loop
+    js/dashboard.jsx    # React dashboard (Overview / Risk / Incidents / Remediation / Models / Drift)
 ```
 
-As later modules (prediction, risk, RCA, remediation) ship in the backend, their routes
-will drive new sections here: incidents feed, anomaly levels, risk score, and
-remediation actions.
+The dashboard is a single-page React app loaded from CDNs with no build step:
+Overview (health, feature table, service risk + anomaly scores), Risk Scores
+(per-service risk table), Incidents (RCA timeline with root-cause explanations),
+Remediation (approve/execute pending plans, recovery history), Models (experiment
+registry: model comparison + hyperparameters, Day 21), and Drift & ML
+(drift report, degradation, retraining trigger).
